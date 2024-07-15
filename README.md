@@ -85,7 +85,6 @@ Gender: <input id="gender" type="text" onkeyup="doLookup()">
     }
 </script>
 ```
-
 **Explanation:**
 - The `onkeyup` event triggers the `doLookup()` function each time the user types in the Gender text box.
 - `XMLHttpRequest` is used to send a GET request to the `Validation` servlet with the gender value as a parameter.
@@ -114,9 +113,103 @@ E-mail ID: <input id="emailId" type="text" onblur="validateEmail()">
     }
 </script>
 ```
-
 **Explanation:**
 - The `onblur` event triggers the `validateEmail()` function when the text box loses focus.
 - `XMLHttpRequest` is used to send a POST request to the `Validation` servlet with the email value as a parameter.
 - The request header is set to `application/x-www-form-urlencoded` to ensure proper encoding of the data.
 - The servlet processes the request and returns a response, which is handled in the `onreadystatechange` function.
+
+### 13. Asynchronous Processing in Servlets
+
+**Asynchronous Processing** in servlets allows long-running tasks to be executed in separate threads, freeing up the servlet container to handle other requests. This is particularly useful for improving the scalability and performance of web applications that need to handle time-consuming tasks.
+
+#### Key Concepts
+1. **AsyncContext**: An object that holds the context for asynchronous processing.
+2. **AsyncListener**: An interface for receiving notifications about the lifecycle of an asynchronous operation.
+3. **Completing the Async Operation**: Methods like `complete()` and `dispatch()` to signal the end of the async processing.
+
+#### Example Scenario
+
+You need to create an asynchronous servlet that uses a thread pool to handle a time-consuming task.
+
+**Code Snippet for Asynchronous Servlet**
+
+1. **Servlet Configuration and Initialization:**
+    - Define the servlet and configure async support in the `web.xml` or using annotations.
+
+```java
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+@WebServlet(urlPatterns = "/asyncTask", asyncSupported = true)
+public class AsyncServlet extends HttpServlet {
+    private ExecutorService executorService;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        executorService = Executors.newFixedThreadPool(20); // Thread pool with 20 threads
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        AsyncContext asyncContext = request.startAsync();
+        executorService.submit(new AsyncRequestProcessor(asyncContext));
+    }
+
+    @Override
+    public void destroy() {
+        executorService.shutdown();
+        super.destroy();
+    }
+}
+```
+
+2. **AsyncRequestProcessor Class:**
+
+```java
+import javax.servlet.AsyncContext;
+import java.io.IOException;
+
+public class AsyncRequestProcessor implements Runnable {
+    private AsyncContext asyncContext;
+
+    public AsyncRequestProcessor(AsyncContext asyncContext) {
+        this.asyncContext = asyncContext;
+    }
+
+    @Override
+    public void run() {
+        // Simulate a time-consuming task
+        try {
+            Thread.sleep(5000); // Simulate delay
+            asyncContext.getResponse().getWriter().write("Task completed!");
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        } finally {
+            asyncContext.complete(); // Complete the asynchronous processing
+        }
+    }
+}
+```
+
+**Explanation:**
+1. **Servlet Configuration**:
+    - The `@WebServlet` annotation with `asyncSupported = true` enables asynchronous processing for the servlet.
+    - The `init` method initializes an `ExecutorService` with a thread pool of 20 threads.
+
+2. **Handling Requests Asynchronously**:
+    - In the `doGet` method, `request.startAsync()` starts asynchronous processing and returns an `AsyncContext`.
+    - The `executorService.submit(new AsyncRequestProcessor(asyncContext))` submits the task to the thread pool.
+
+3. **AsyncRequestProcessor Class**:
+    - Implements `Runnable` to define the task to be executed asynchronously.
+    - Simulates a time-consuming task with `Thread.sleep(5000)`.
+    - Writes a response and calls `asyncContext.complete()` to complete the asynchronous processing.
