@@ -53,3 +53,70 @@
 ### 11. Struts Framework
 - **ActionForm Bean**: Used in Struts to encapsulate form data.
 - **Struts Configuration**: Registering ActionForm classes in `struts-config.xml`.
+
+### 12. AJAX Overview and Implementation in JSP
+
+AJAX (Asynchronous JavaScript and XML) is a technique for creating fast and dynamic web pages. It allows web pages to be updated asynchronously by exchanging small amounts of data with the server behind the scenes. This means that parts of a web page can be updated without reloading the entire page.
+
+#### Key Components of AJAX
+1. **XMLHttpRequest Object**: Used to exchange data with a server.
+2. **JavaScript**: Manages the AJAX requests and responses.
+3. **Server-side Script**: Processes the requests and sends responses (e.g., servlets in Java).
+
+#### Example 1: Gender Field Validation
+
+**HTML and JavaScript Code:**
+
+```html
+Gender: <input id="gender" type="text" onkeyup="doLookup()">
+<script>
+    function doLookup() {
+        var xhr = new XMLHttpRequest();
+        var gender = document.getElementById('gender').value;
+        xhr.open('GET', 'Validation?gender=' + gender, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = xhr.responseText;
+                // Handle the response from the server
+                console.log(response);
+            }
+        };
+        xhr.send();
+    }
+</script>
+```
+
+**Explanation:**
+- The `onkeyup` event triggers the `doLookup()` function each time the user types in the Gender text box.
+- `XMLHttpRequest` is used to send a GET request to the `Validation` servlet with the gender value as a parameter.
+- The servlet processes the request and returns a response, which is handled in the `onreadystatechange` function.
+
+#### Example 2: E-mail ID Validation
+
+**HTML and JavaScript Code:**
+
+```html
+E-mail ID: <input id="emailId" type="text" onblur="validateEmail()">
+<script>
+    function validateEmail() {
+        var xhr = new XMLHttpRequest();
+        var email = document.getElementById('emailId').value;
+        xhr.open('POST', 'Validation', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = xhr.responseText;
+                // Handle the response from the server
+                console.log(response);
+            }
+        };
+        xhr.send('email=' + encodeURIComponent(email));
+    }
+</script>
+```
+
+**Explanation:**
+- The `onblur` event triggers the `validateEmail()` function when the text box loses focus.
+- `XMLHttpRequest` is used to send a POST request to the `Validation` servlet with the email value as a parameter.
+- The request header is set to `application/x-www-form-urlencoded` to ensure proper encoding of the data.
+- The servlet processes the request and returns a response, which is handled in the `onreadystatechange` function.
